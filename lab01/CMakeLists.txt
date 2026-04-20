@@ -42,12 +42,12 @@ set(LAB01_TASK1_A85_STEP2_ARGS
 )
 
 set(LAB01_TASK2_STEP1_ARGS
-    1 1 1 10000 1
+    1 1 1 20000 1
     ${CMAKE_CURRENT_SOURCE_DIR}/results/task2_step1.csv
 )
 
 set(LAB01_TASK2_STEP2_ARGS
-    1 1 1 10000 2
+    1 1 1 20000 2
     ${CMAKE_CURRENT_SOURCE_DIR}/results/task2_step2.csv
 )
 
@@ -62,6 +62,7 @@ set(LAB01_TASK4_ARGS
 )
 
 set(LAB01_PLOTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/results/plots)
+set(MATPLOTLIB_CONFIG_DIR ${CMAKE_BINARY_DIR}/matplotlib-cache)
 set(PLOT_SCRIPT ${CMAKE_SOURCE_DIR}/scripts/plot.py)
 
 add_custom_target(run_lab01_task1
@@ -117,64 +118,68 @@ add_custom_target(run_lab01_all
 
 add_custom_target(plot_lab01
     COMMAND ${CMAKE_COMMAND} -E make_directory ${LAB01_PLOTS_DIR}
-    COMMAND ${PROJECT_VENV_PYTHON} ${PLOT_SCRIPT}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${MATPLOTLIB_CONFIG_DIR}
+    COMMAND ${CMAKE_COMMAND} -E env MPLCONFIGDIR=${MATPLOTLIB_CONFIG_DIR} ${PROJECT_VENV_PYTHON} ${PLOT_SCRIPT}
         ${CMAKE_CURRENT_SOURCE_DIR}/results/task1_a17_step1.csv
         ${LAB01_PLOTS_DIR}/task1_a17_step1.png
         --plot_type scatter
         --x_label x_n
         --y_label x_n+1
         --title "Task 1: a=17, step=1"
-    COMMAND ${PROJECT_VENV_PYTHON} ${PLOT_SCRIPT}
+    COMMAND ${CMAKE_COMMAND} -E env MPLCONFIGDIR=${MATPLOTLIB_CONFIG_DIR} ${PROJECT_VENV_PYTHON} ${PLOT_SCRIPT}
         ${CMAKE_CURRENT_SOURCE_DIR}/results/task1_a17_step2.csv
         ${LAB01_PLOTS_DIR}/task1_a17_step2.png
         --plot_type scatter
         --x_label x_n
         --y_label x_n+2
         --title "Task 1: a=17, step=2"
-    COMMAND ${PROJECT_VENV_PYTHON} ${PLOT_SCRIPT}
+    COMMAND ${CMAKE_COMMAND} -E env MPLCONFIGDIR=${MATPLOTLIB_CONFIG_DIR} ${PROJECT_VENV_PYTHON} ${PLOT_SCRIPT}
         ${CMAKE_CURRENT_SOURCE_DIR}/results/task1_a85_step1.csv
         ${LAB01_PLOTS_DIR}/task1_a85_step1.png
         --plot_type scatter
         --x_label x_n
         --y_label x_n+1
         --title "Task 1: a=85, step=1"
-    COMMAND ${PROJECT_VENV_PYTHON} ${PLOT_SCRIPT}
+    COMMAND ${CMAKE_COMMAND} -E env MPLCONFIGDIR=${MATPLOTLIB_CONFIG_DIR} ${PROJECT_VENV_PYTHON} ${PLOT_SCRIPT}
         ${CMAKE_CURRENT_SOURCE_DIR}/results/task1_a85_step2.csv
         ${LAB01_PLOTS_DIR}/task1_a85_step2.png
         --plot_type scatter
         --x_label x_n
         --y_label x_n+2
         --title "Task 1: a=85, step=2"
-    COMMAND ${PROJECT_VENV_PYTHON} ${PLOT_SCRIPT}
+    COMMAND ${CMAKE_COMMAND} -E env MPLCONFIGDIR=${MATPLOTLIB_CONFIG_DIR} ${PROJECT_VENV_PYTHON} ${PLOT_SCRIPT}
         ${CMAKE_CURRENT_SOURCE_DIR}/results/task2_step1.csv
         ${LAB01_PLOTS_DIR}/task2_step1.png
         --plot_type scatter
         --x_label k_n
         --y_label k_n+1
         --title "Task 2: step=1"
-    COMMAND ${PROJECT_VENV_PYTHON} ${PLOT_SCRIPT}
+    COMMAND ${CMAKE_COMMAND} -E env MPLCONFIGDIR=${MATPLOTLIB_CONFIG_DIR} ${PROJECT_VENV_PYTHON} ${PLOT_SCRIPT}
         ${CMAKE_CURRENT_SOURCE_DIR}/results/task2_step2.csv
         ${LAB01_PLOTS_DIR}/task2_step2.png
         --plot_type scatter
         --x_label k_n
         --y_label k_n+2
         --title "Task 2: step=2"
-    COMMAND ${PROJECT_VENV_PYTHON} ${PLOT_SCRIPT}
+    COMMAND ${CMAKE_COMMAND} -E env MPLCONFIGDIR=${MATPLOTLIB_CONFIG_DIR} ${PROJECT_VENV_PYTHON} ${PLOT_SCRIPT}
         ${CMAKE_CURRENT_SOURCE_DIR}/results/task3_results.csv
         ${LAB01_PLOTS_DIR}/task3_times.png
         --plot_type bar
         --y_label "time [us]"
         --title "Task 3: C++ generator timings"
         --value_column time_us
-    COMMAND ${PROJECT_VENV_PYTHON} ${PLOT_SCRIPT}
+        --sort
+    COMMAND ${CMAKE_COMMAND} -E env MPLCONFIGDIR=${MATPLOTLIB_CONFIG_DIR} ${PROJECT_VENV_PYTHON} ${PLOT_SCRIPT}
         ${CMAKE_CURRENT_SOURCE_DIR}/results/task4_results.csv
         ${LAB01_PLOTS_DIR}/task4_relative_times.png
         --plot_type bar
         --y_label "relative time"
-        --title "Task 4: GSL timings relative to default"
+        --title "Task 4: GSL timings relative to default (Default generator: mt19937)"
         --value_column relative_to_default
+        --sort 
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMENT "Generating lab01 plots"
+    VERBATIM
 )
 
 add_dependencies(plot_lab01 run_lab01_all python_venv)

@@ -1,0 +1,7 @@
+generator,time_us
+minstd_rand,1069373
+mt19937,409059
+mt19937_64,376511
+ranlux48_base,448480
+ranlux48,19043909
+knuth_b,1375812

@@ -24,12 +24,14 @@ def read_pairs(filepath):
     return x, y
 
 
-def read_column(filepath, category_column, value_column):
+def read_column(filepath, category_column, value_column, sort=False):
     labels = []
     values = []
 
     with open(filepath, newline="") as file:
         reader = csv.DictReader(file)
+        if sort:
+            reader = sorted(reader, key=lambda row: float(row[value_column]))
         for row in reader:
             labels.append(row[category_column])
             values.append(float(row[value_column]))
@@ -67,6 +69,7 @@ def main():
     argument_parser.add_argument("--x_label", default="x_n")
     argument_parser.add_argument("--y_label", default="x_{n+k}")
     argument_parser.add_argument("--title", default="Plot")
+    argument_parser.add_argument("--sort", action="store_true", help="Sort values in bar plot")
     argument_parser.add_argument("--category_column", default="generator")
     argument_parser.add_argument("--value_column", default="time_us")
     args = argument_parser.parse_args()
@@ -77,7 +80,7 @@ def main():
         x, y = read_pairs(args.filepath)
         plot_scatter(x, y, args.x_label, args.y_label, args.title, args.save_path)
     else:
-        labels, values = read_column(args.filepath, args.category_column, args.value_column)
+        labels, values = read_column(args.filepath, args.category_column, args.value_column, sort=args.sort)
         plot_bar(labels, values, args.y_label, args.title, args.save_path)
 
 
