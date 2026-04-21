@@ -18,8 +18,13 @@ foreach(target lab01_task1 lab01_task2 lab01_task3 lab01_task4)
     target_compile_features(${target} PRIVATE cxx_std_20)
 endforeach()
 
-target_compile_options(lab01_task3 PRIVATE -O2)
-target_compile_options(lab01_task4 PRIVATE -O2)
+if(MSVC)
+    target_compile_options(lab01_task3 PRIVATE /Od)
+    target_compile_options(lab01_task4 PRIVATE /Od)
+else()
+    target_compile_options(lab01_task3 PRIVATE -O0)
+    target_compile_options(lab01_task4 PRIVATE -O0)
+endif()
 
 set(LAB01_TASK1_A17_STEP1_ARGS
     17 0 8191 1 2500 1
