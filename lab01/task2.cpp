@@ -35,8 +35,8 @@ int main(int argc, char* argv[]) {
     int x = std::stoi(argv[1]);
     int y = std::stoi(argv[2]);
     int z = std::stoi(argv[3]);
-    int count = std::stoi(argv[4]);
-    int step = std::stoi(argv[5]);
+    const int count = std::stoi(argv[4]);
+    const int step = std::stoi(argv[5]);
     std::string filepath = argv[6];
 
     auto numbers = generate_random_numbers(x, y, z, count);

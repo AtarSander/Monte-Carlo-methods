@@ -26,3 +26,4 @@ add_custom_command(
 add_custom_target(python_venv DEPENDS ${PROJECT_PYTHON_VENV_STAMP})
 
 add_subdirectory(lab01)
+add_subdirectory(lab02)
