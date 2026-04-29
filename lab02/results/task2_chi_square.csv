@@ -1,0 +1,7 @@
+generator,bins,chi_square,p_value,reject_h0
+ranlux,11,6.42564,0.778326,false
+ranlux,51,39.0245,0.869067,false
+ranlux,101,92.1958,0.698262,false
+randu,11,9.39256,0.495297,false
+randu,51,48.7981,0.521652,false
+randu,101,118.306,0.102142,false
