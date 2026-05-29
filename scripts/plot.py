@@ -88,6 +88,62 @@ def read_grouped_series(filepath, x_column, y_column, series_column):
     return series
 
 
+def read_filtered_multi_value_series(filepath, x_column, filter_column, filter_value, value_columns, value_labels=None):
+    labels = value_labels if value_labels else value_columns
+    series = {label: ([], []) for label in labels}
+
+    with open(filepath, newline="") as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            if row.get(filter_column) != filter_value:
+                continue
+
+            raw_x = row.get(x_column)
+            if raw_x in (None, ""):
+                continue
+
+            x_value = float(raw_x)
+            for label, column in zip(labels, value_columns):
+                raw_y = row.get(column)
+                if raw_y in (None, ""):
+                    continue
+
+                x_values, y_values = series[label]
+                x_values.append(x_value)
+                y_values.append(float(raw_y))
+
+    return series
+
+
+def read_grouped_multi_value_series(filepath, x_column, series_column, value_columns, value_labels=None):
+    labels = value_labels if value_labels else value_columns
+    series = {}
+
+    with open(filepath, newline="") as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            raw_x = row.get(x_column)
+            group_name = row.get(series_column)
+            if raw_x in (None, "") or group_name in (None, ""):
+                continue
+
+            x_value = float(raw_x)
+            for label, column in zip(labels, value_columns):
+                raw_y = row.get(column)
+                if raw_y in (None, ""):
+                    continue
+
+                compound_label = f"{group_name}:{label}"
+                if compound_label not in series:
+                    series[compound_label] = ([], [])
+
+                x_values, y_values = series[compound_label]
+                x_values.append(x_value)
+                y_values.append(float(raw_y))
+
+    return series
+
+
 def read_histogram_values(filepath, value_column=None):
     values = []
 
@@ -214,6 +270,7 @@ def plot_errorbar_series(
     title,
     save_path,
     log_x=False,
+    log_y=False,
     reference_line=None,
 ):
     plt.figure(figsize=(10, 6))
@@ -223,6 +280,8 @@ def plot_errorbar_series(
         plt.legend()
     if log_x:
         plt.xscale("log")
+    if log_y:
+        plt.yscale("log")
     plt.title(title)
     plt.xlabel(x_label)
     plt.ylabel(y_label)
@@ -231,16 +290,19 @@ def plot_errorbar_series(
     plt.close()
 
 
-def plot_multi_series(series, x_label, y_label, title, save_path, log_x=False):
+def plot_multi_series(series, x_label, y_label, title, save_path, log_x=False, log_y=False, hide_legend=False):
     plt.figure(figsize=(10, 6))
     for label, (x_values, y_values) in series.items():
         plt.plot(x_values, y_values, marker="o", markersize=3, linewidth=1.2, label=label)
     if log_x:
         plt.xscale("log")
+    if log_y:
+        plt.yscale("log")
     plt.title(title)
     plt.xlabel(x_label)
     plt.ylabel(y_label)
-    plt.legend()
+    if not hide_legend:
+        plt.legend()
     plt.tight_layout()
     plt.savefig(save_path, dpi=200)
     plt.close()
@@ -340,7 +402,17 @@ def main():
     argument_parser.add_argument("save_path", type=Path, help="Path to save the plot")
     argument_parser.add_argument(
         "--plot_type",
-        choices=["bar", "scatter", "histogram", "errorbar", "histogram_normal", "histogram_custom_density", "multi_series"],
+        choices=[
+            "bar",
+            "scatter",
+            "histogram",
+            "errorbar",
+            "histogram_normal",
+            "histogram_custom_density",
+            "multi_series",
+            "filtered_multi_value_series",
+            "grouped_multi_value_series",
+        ],
         default="scatter",
     )
     argument_parser.add_argument("--x_label", default="x_n")
@@ -358,9 +430,25 @@ def main():
     argument_parser.add_argument("--x_max", type=float, default=4.0, help="Upper range for histogram plot")
     argument_parser.add_argument("--density_function", default=None, help="Named density function to overlay")
     argument_parser.add_argument("--log_x", action="store_true", help="Use logarithmic scale on x axis")
+    argument_parser.add_argument("--log_y", action="store_true", help="Use logarithmic scale on y axis")
+    argument_parser.add_argument("--hide_legend", action="store_true", help="Hide legend in multi-series plots")
     argument_parser.add_argument("--reference_line", type=float, default=None, help="Optional horizontal reference line")
     argument_parser.add_argument("--normal_mean", type=float, default=0.0, help="Mean for normal density overlay")
     argument_parser.add_argument("--normal_stddev", type=float, default=1.0, help="Stddev for normal density overlay")
+    argument_parser.add_argument("--filter_column", default="method", help="Column name used to filter series rows")
+    argument_parser.add_argument("--filter_value", default=None, help="Value used to filter series rows")
+    argument_parser.add_argument(
+        "--value_columns",
+        nargs="+",
+        default=None,
+        help="Multiple value columns to plot as separate series from filtered rows",
+    )
+    argument_parser.add_argument(
+        "--value_labels",
+        nargs="+",
+        default=None,
+        help="Optional labels for value_columns in filtered_multi_value_series plots",
+    )
     args = argument_parser.parse_args()
 
     args.save_path.parent.mkdir(parents=True, exist_ok=True)
@@ -382,6 +470,7 @@ def main():
             args.title,
             args.save_path,
             log_x=args.log_x,
+            log_y=args.log_y,
             reference_line=args.reference_line,
         )
     elif args.plot_type == "histogram_normal":
@@ -420,6 +509,57 @@ def main():
             args.title,
             args.save_path,
             log_x=args.log_x,
+            log_y=args.log_y,
+            hide_legend=args.hide_legend,
+        )
+    elif args.plot_type == "filtered_multi_value_series":
+        if args.filter_value is None:
+            raise ValueError("filtered_multi_value_series requires --filter_value")
+        if not args.value_columns:
+            raise ValueError("filtered_multi_value_series requires at least one --value_columns entry")
+        if args.value_labels and len(args.value_labels) != len(args.value_columns):
+            raise ValueError("--value_labels must match the number of --value_columns entries")
+
+        series = read_filtered_multi_value_series(
+            args.filepath,
+            args.x_column,
+            args.filter_column,
+            args.filter_value,
+            args.value_columns,
+            args.value_labels,
+        )
+        plot_multi_series(
+            series,
+            args.x_label,
+            args.y_label,
+            args.title,
+            args.save_path,
+            log_x=args.log_x,
+            log_y=args.log_y,
+            hide_legend=args.hide_legend,
+        )
+    elif args.plot_type == "grouped_multi_value_series":
+        if not args.value_columns:
+            raise ValueError("grouped_multi_value_series requires at least one --value_columns entry")
+        if args.value_labels and len(args.value_labels) != len(args.value_columns):
+            raise ValueError("--value_labels must match the number of --value_columns entries")
+
+        series = read_grouped_multi_value_series(
+            args.filepath,
+            args.x_column,
+            args.series_column,
+            args.value_columns,
+            args.value_labels,
+        )
+        plot_multi_series(
+            series,
+            args.x_label,
+            args.y_label,
+            args.title,
+            args.save_path,
+            log_x=args.log_x,
+            log_y=args.log_y,
+            hide_legend=args.hide_legend,
         )
     else:
         values = read_histogram_values(args.filepath, args.histogram_column)
