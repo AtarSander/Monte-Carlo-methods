@@ -1,0 +1,6 @@
+metric,mean,stddev,q025,median,q975,min,max
+peak_day,26.281,16.6311,13,20,79,10,128
+days_until_peak,16.281,16.6311,3,10,69,0,118
+peak_infected,167.006,19.1886,130,166,203,120,238
+remaining_growth,47.006,19.1886,10,46,83,0,118
+peak_to_inflection_ratio,1.39172,0.159905,1.08333,1.38333,1.69167,1,1.98333

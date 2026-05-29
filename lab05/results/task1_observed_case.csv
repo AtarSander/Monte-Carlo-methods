@@ -1,0 +1,2 @@
+experiment,inflection_day,infected_at_inflection,susceptible_at_inflection,recovered_at_inflection,max_daily_increase,peak_day,days_until_peak,peak_infected,remaining_growth,peak_to_inflection_ratio,final_susceptible,final_infectious,final_recovered,total_ever_infected,attack_fraction_percent,attack_fraction_non_vaccinated_percent
+1,10,120,6770,110,18,28,18,198,78,1.65,3991,22,2987,3009,30.09,42.9857
